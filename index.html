@@ -607,7 +607,7 @@
       </div>
 
       <div class="subview" id="sub-confirm" hidden>
-        <p class="cf-help">Predbežné tréningy, ktoré treba potvrdiť — zavolajte klientovi. Zoradené podľa času; nezávisí od filtrov vyššie.</p>
+        <p class="cf-help">Predbežné tréningy Vertigo, ktoré treba potvrdiť — zavolajte klientovi. Zoradené podľa času; nezávisí od filtrov vyššie.</p>
         <div id="confirmList" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
 
@@ -891,7 +891,7 @@
   "use strict";
   // ---- LIVE MODE settings (public values, not secrets) ----
   var PRODUCTION = true;    // true in the owner's real deployment: hides the "prototype / test" wording
-  var BACKEND_URL = 'https://script.google.com/macros/s/AKfycbx4Xmd-U-SUivSGJdj-GrG324GZJoKYb3rjl_4C3LnwYW1a3XqoF_l5k_fX2GVwlLxIeg/exec';       // Apps Script web app URL, ends with /exec
+  var BACKEND_URL = 'PASTE-WEB-APP-URL-HERE';       // Apps Script web app URL, ends with /exec
   var GOOGLE_CLIENT_ID = '610436969794-7dtpr3a713g24kgrlk6t05ode3fjssgd.apps.googleusercontent.com'; // OAuth web client ID from Google Cloud Console
   var READ_ONLY = false;      // true = the board only shows data and changes nothing
   var PAGE_VERSION = 1;    // sent with every request; the server refuses pages older than its MIN_PAGE_VERSION (a forgotten old tab can never write)
@@ -4260,7 +4260,7 @@
   function confirmItems(){
     var now = Date.now(), admin = !isTrainerRole(), out = {late:[], red:[], soon:[], later:[], old:[]};
     sessions.forEach(function(s){
-      if(s.status !== 'tentative' || s._archived) return;
+      if(s.status !== 'tentative' || s._archived || isPrivateSession(s)) return;   // Private trainings are never chased for confirmation: only Vertigo ones
       if(!admin && (!isAssigned(s) || isMaskedForViewer(s))) return;
       if(hasEnded(s)){ if(admin) (now - startMsOf(s) <= CONFIRM_LATE_DAYS * 86400000 ? out.late : out.old).push(s); return; }   // past + still tentative: only admin can settle it
       var h = (startMsOf(s) - now) / 3600000;
