@@ -188,7 +188,7 @@
   .ruler-clip{ flex:1 1 0; overflow:hidden; position:relative; min-height:26px; }
   .ruler-clip #timeGutter{ width:var(--body-w, 100%); transform:translateX(var(--scroll-x, 0px)); }
   .cal-dayrow .hrow-label{ position:sticky; left:0; z-index:5; }
-  .hrow{ display:flex; border-top:1px solid var(--border-soft); }
+  .hrow{ display:flex; border-top:1px solid var(--border); }
   .hrow:first-child{ border-top:none; }
   /* The sideways scrollbar sits ABOVE the hours (so it is always at hand, however long the week is) and pins with the ruler. The real scroller's own
      bar is hidden; the two stay in step. */
@@ -215,11 +215,11 @@
   .hrow-label .hrl-dow{ font-size:10px; color:var(--ink-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
   .hrow-body{ position:relative; flex:0 0 auto; width:var(--body-w, 100%); min-height:54px; background-image:linear-gradient(to right, var(--border-soft) 0, var(--border-soft) 1px, transparent 1px); background-size:var(--hour-px, 120px) 100%; background-position:var(--grid-off, 0px) 0; background-repeat:repeat-x; cursor:copy; }
   .hrow-ruler .hrow-body{ min-height:26px; cursor:default; background-image:none; width:var(--body-w, 100%); }
-  .hrow.day-alt .hrow-label, .hrow.day-alt .hrow-body{ background-color:color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+  .hrow.day-alt .hrow-label, .hrow.day-alt .hrow-body{ background-color:color-mix(in srgb, var(--accent) 17%, var(--surface)); }
   .cal-dayrow.is-today .hrow-label{ box-shadow:inset 4px 0 0 var(--accent); background-color:color-mix(in srgb, var(--accent) 16%, var(--surface)); }
   /* Month view: a thin header with the week number before each Monday; its text pins to the left edge while the hours scroll sideways */
-  .week-sep{ border-top:1px solid var(--border-soft); background:var(--surface-2); font-size:11px; font-weight:700; color:var(--ink-dim); letter-spacing:0.04em; text-transform:uppercase; }
-  .week-sep span{ position:sticky; left:0; display:inline-block; padding:4px 10px; }
+  .week-sep{ margin-top:14px; border-top:3px solid var(--accent); border-bottom:1px solid var(--border); background:color-mix(in srgb, var(--accent) 22%, var(--surface)); font-size:12px; font-weight:800; color:var(--ink); letter-spacing:0.04em; text-transform:uppercase; }
+  .week-sep span{ position:sticky; left:0; display:inline-block; padding:6px 10px; }
   .hour-label{ position:absolute; top:50%; left:0; transform:translateY(-50%); font-size:10.5px; color:var(--ink-faint); font-family:'IBM Plex Mono'; padding-left:3px; }
   /* Full fills: the colour comes from the training's group (inline), and its readable ink with it. */
   /* now-line, dimmed past of today, current-time tag in the ruler, and edge chips counting trainings scrolled out of sight */
@@ -359,6 +359,36 @@
   .form-cols{ display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
   .form-col{ display:flex; flex-direction:column; gap:11px; min-width:0; }
   @media (max-width:900px){ .form-cols{ grid-template-columns:1fr; gap:11px; } #sessionOverlay .modal{ width:min(540px, 100%); } }
+
+  /* Phones: the popups fill the screen (no sideways sway, the close button is always reachable), fields never exceed the width,
+     and the trainer list is part of the page scroll instead of a scroll area of its own. */
+  .modal{ overflow-x:hidden; }
+  .modal-overlay{ overflow:hidden; }
+  .row2 > *, .row3 > *, .form-col, .field{ min-width:0; }
+  .field input, .field select, .field textarea{ min-width:0; max-width:100%; }
+  @media (max-width:700px){
+    .modal-overlay{ padding:0; align-items:stretch; }
+    .modal, #sessionOverlay .modal, #calOverlay .modal{ width:100%; max-width:100%; height:100%; max-height:none; border-radius:0; border:none; }
+    @supports (height:100dvh){ .modal-overlay{ height:100dvh; } }
+    .field input, .field select, .field textarea{ font-size:16px; }   /* below 16px iOS zooms in on focus and the page then pans sideways */
+    .field input[type=date], .field input[type=time]{ -webkit-appearance:none; appearance:none; min-height:40px; width:100%; }
+    .row3{ flex-wrap:wrap; } .row3 > *{ flex:1 1 40%; } .row3 > :first-child{ flex-basis:100%; }
+    #sessionOverlay .trainer-list{ max-height:none; min-height:0; overflow:visible; display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; }
+    #sessionOverlay .trainer-opt{ font-size:14px; min-height:38px; }
+    #sessionOverlay .trainer-opt input{ width:20px; height:20px; flex:none; }
+    #sessionOverlay .field .trainer-opt{ overflow-wrap:anywhere; text-transform:none; font-weight:500; letter-spacing:0; color:var(--ink); }
+  }
+  /* Reports: filters are tucked away behind one bar that always says what is selected */
+  .rep-bar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .rep-sum{ font-size:13px; color:var(--ink-dim); min-width:0; overflow-wrap:anywhere; }
+  .rep-sum.active{ color:var(--accent); font-weight:600; }
+  .rep-filters{ border:1px solid var(--border-soft); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:14px; }
+  .rep-filters[hidden]{ display:none; }
+  .fchips{ display:flex; flex-wrap:wrap; gap:6px; max-height:132px; overflow-y:auto; }
+  .fchip{ border:1px solid var(--border); background:var(--surface); color:var(--ink); border-radius:999px; padding:8px 13px; font-size:13px; font-family:inherit; cursor:pointer; min-height:38px; }
+  .fchip[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+  .rep-native{ display:none !important; }
+  .report-sect-h{ font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-dim); margin:8px 0 0; }
   /* number with big - / + buttons (the native arrows are too small to hit) */
   .stepper{ display:inline-flex; align-items:stretch; width:150px; }
   .stepper input{ width:64px; text-align:center; border-radius:0 !important; -moz-appearance:textfield; appearance:textfield; }
@@ -567,15 +597,23 @@
 
   <section class="view" id="view-reports" hidden>
     <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+      <div class="rep-bar">
+        <button class="btn btn-sm" type="button" id="repFilterToggle" aria-expanded="false" aria-controls="repFilters">Filtre ▾</button>
+        <span class="rep-sum" id="repFilterSummary"></span>
+        <button class="btn btn-ghost btn-sm" type="button" id="repFilterReset" hidden>Zrušiť filtre</button>
+      </div>
+      <div class="rep-filters" id="repFilters" hidden>
       <div class="row2" style="flex-wrap:wrap; align-items:flex-start;">
         <div class="field" style="min-width:170px;">
-          <label for="reportMonth">Mesiac(e)</label>
-          <select id="reportMonth" multiple size="4"></select>
-          <span style="font-size:11px; color:var(--ink-dim);">Cmd/Ctrl-klik pre výber viacerých</span>
+          <label id="reportMonthLabel">Mesiac(e)</label>
+          <div class="fchips" id="reportMonthChips"></div>
+          <select id="reportMonth" class="rep-native" multiple size="4" aria-hidden="true" tabindex="-1"></select>
+          <span style="font-size:11px; color:var(--ink-dim);">Dá sa vybrať viac mesiacov.</span>
         </div>
         <div class="field" style="min-width:150px;">
-          <label for="reportStatus">Stav</label>
-          <select id="reportStatus" multiple size="4">
+          <label id="reportStatusLabel">Stav</label>
+          <div class="fchips" id="reportStatusChips"></div>
+          <select id="reportStatus" class="rep-native" multiple size="4" aria-hidden="true" tabindex="-1">
             <option value="confirmed">Potvrdené</option>
             <option value="tentative">Predbežné</option>
             <option value="completed">Dokončené</option>
@@ -592,6 +630,7 @@
           <datalist id="reportTagDatalist"></datalist>
           <div id="reportTagChips" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;"></div>
         </div>
+      </div>
       </div>
       <div class="subtabs" id="reportSubtabs">
         <button class="subtab subtab-urgent" data-sub="confirm" id="confirmSubtab">Na potvrdenie</button>
@@ -2887,7 +2926,51 @@
     });
   }
 
-  function drawAll(){ if(archiveForReports()) return; drawSummary(); drawConfirm(); drawMissing(); drawByTrainer(); drawConflicts(); drawPrivate(); drawVertigo(); drawActivity(); drawLoad(); }
+  // ---- filter bar: chips for month and status (the two hidden selects stay the single source of truth), one summary line ----
+  var STATUS_LABEL = {confirmed:'Potvrdené', tentative:'Predbežné', completed:'Dokončené', cancelled:'Zrušené'};
+  function repChips(selId, boxId, keepOne){
+    var sel = document.getElementById(selId), box = document.getElementById(boxId);
+    box.innerHTML = Array.from(sel.options).map(function(o, i){
+      return '<button type="button" class="fchip" data-i="'+i+'" aria-pressed="'+(o.selected?'true':'false')+'">'+esc(o.textContent)+'</button>';
+    }).join('');
+    box.querySelectorAll('.fchip').forEach(function(b){
+      b.addEventListener('click', function(){
+        var o = sel.options[+b.dataset.i]; o.selected = !o.selected;
+        if(keepOne && !sel.selectedOptions.length) o.selected = true;   // a report always needs a month
+        sel.dispatchEvent(new Event('change', {bubbles:true}));
+      });
+    });
+  }
+  function updateRepFilterUI(){
+    var mSel = document.getElementById('reportMonth'), sSel = document.getElementById('reportStatus');
+    if(!mSel.options.length) return;
+    repChips('reportMonth', 'reportMonthChips', true);
+    repChips('reportStatus', 'reportStatusChips', false);
+    var months = Array.from(mSel.selectedOptions).map(function(o){ return o.textContent; });
+    var stats = Array.from(sSel.selectedOptions).map(function(o){ return STATUS_LABEL[o.value] || o.textContent; });
+    var curOnly = mSel.selectedOptions.length===1 && mSel.selectedOptions[0].value===ym(TODAY);
+    var parts = ['Mesiac: ' + months.join(', ')];
+    if(stats.length) parts.push('Stav: ' + stats.join(', '));
+    if(reportTagFilters.length) parts.push('Značka: ' + reportTagFilters.join(', '));
+    var changed = !curOnly || stats.length || reportTagFilters.length;
+    var sum = document.getElementById('repFilterSummary');
+    sum.textContent = parts.join(' · ');
+    sum.classList.toggle('active', !!changed);
+    document.getElementById('repFilterReset').hidden = !changed;
+  }
+  document.getElementById('repFilterToggle').addEventListener('click', function(){
+    var box = document.getElementById('repFilters'); box.hidden = !box.hidden;
+    this.setAttribute('aria-expanded', box.hidden ? 'false' : 'true');
+    this.textContent = box.hidden ? 'Filtre ▾' : 'Skryť filtre ▴';
+  });
+  document.getElementById('repFilterReset').addEventListener('click', function(){
+    var m = document.getElementById('reportMonth'), cur = ym(TODAY), has = Array.from(m.options).some(function(o){ return o.value===cur; });
+    Array.from(m.options).forEach(function(o, i){ o.selected = has ? (o.value===cur) : (i===m.options.length-1); });
+    Array.from(document.getElementById('reportStatus').options).forEach(function(o){ o.selected = false; });
+    reportTagFilters.length = 0; renderTagChips(); drawAll();
+  });
+
+  function drawAll(){ updateRepFilterUI(); if(archiveForReports()) return; drawSummary(); drawConfirm(); drawMissing(); drawByTrainer(); drawConflicts(); drawPrivate(); drawVertigo(); drawActivity(); drawLoad(); }
 
   // A cell starting with = + - @ is executed as a formula when the CSV is opened in Excel/Sheets — prefix it so it stays plain text.
   function csvEscape(v){ v=String(v==null?'':v); if(/^[=+\-@\t\r]/.test(v)) v = "'"+v; return /[";\r\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }   // fields are separated by ";" (see the export), so a comma needs no quoting
@@ -3187,15 +3270,23 @@
   document.getElementById('vertigoUnpaidOnly').addEventListener('change', drawVertigo);
 
   function drawMissing(){
-    var monthSessions = filteredMonthSessions().filter(isMissing).sort(function(a,b){ return a.date===b.date ? toMin(a.start)-toMin(b.start) : a.date.localeCompare(b.date); });
+    var all = filteredMonthSessions().filter(isMissing).sort(function(a,b){ return a.date===b.date ? toMin(a.start)-toMin(b.start) : a.date.localeCompare(b.date); });
     var wrap = document.getElementById('missingList');
-    var lastDate = null;
-    wrap.innerHTML = monthSessions.length ? monthSessions.map(function(s){
-      var have = s.trainerIds.map(trainerNameH).join(', ') || 'zatiaľ nikto';
-      var heading = s.date!==lastDate ? (lastDate=s.date, '<div class="report-date-h">'+fmtDateHeading(s.date)+'</div>') : '';
-      return heading + '<div class="flag-row" data-id="'+s.id+'"><div class="fr-main">'+esc(s.clientName||s.type)+' &middot; '+s.start+'–'+s.end+
-        '<div class="fr-sub">Potrebuje '+s.requiredTrainers+', má '+s.trainerIds.length+' ('+have+')'+(s.tag?' &middot; '+esc(s.tag):'')+'</div></div></div>';
-    }).join('') : '<div class="agenda-empty">V tomto výbere nič nechýba.</div>';
+    function rows(list){
+      var lastDate = null;
+      return list.map(function(s){
+        var have = s.trainerIds.map(trainerNameH).join(', ') || 'zatiaľ nikto';
+        var heading = s.date!==lastDate ? (lastDate=s.date, '<div class="report-date-h">'+fmtDateHeading(s.date)+'</div>') : '';
+        return heading + '<div class="flag-row" data-id="'+s.id+'"><div class="fr-main">'+esc(s.clientName||s.type)+' &middot; '+s.start+'–'+s.end+
+          '<div class="fr-sub">Potrebuje '+s.requiredTrainers+', má '+s.trainerIds.length+' ('+have+')'+(s.tag?' &middot; '+esc(s.tag):'')+'</div></div></div>';
+      }).join('');
+    }
+    // Still to come: somebody has to be found. Already held: nobody can be found any more, but who led it is missing from the record (hours, pay).
+    var ahead = all.filter(function(s){ return !hasEnded(s); }), held = all.filter(hasEnded);
+    var html = '';
+    if(ahead.length) html += '<div class="report-sect-h">Treba nájsť trénera</div>' + rows(ahead);
+    if(held.length) html += '<div class="report-sect-h">Už prebehlo – doplňte, kto ho viedol</div>' + rows(held);
+    wrap.innerHTML = html || '<div class="agenda-empty">V tomto výbere nič nechýba.</div>';
     wrap.querySelectorAll('.flag-row').forEach(function(row){ row.addEventListener('click', function(){ openModal(row.dataset.id); }); });
   }
 
@@ -3399,7 +3490,7 @@
   }
   var syncCtls = [], pollCtl = null, pollAborted = false;
   // Which page and which server code are running: hover over "Obnoviť". (The server's build is also what its web address shows when opened.)
-  var PAGE_BUILD = '2026-11-27-launch-1', serverBuild = '?';
+  var PAGE_BUILD = '2026-11-27-launch-3', serverBuild = '?';
   function setBuildInfo(b){ serverBuild = String(b).slice(0, 40); var rb = document.getElementById('refreshBtn'); if(rb) rb.title = 'Obnoviť údaje · stránka ' + PAGE_BUILD + ' · server ' + serverBuild; }
   function post(body){
     // text/plain keeps this a "simple" cross-origin request (no preflight), which Apps Script web apps accept
