@@ -3792,7 +3792,7 @@
   var FRESH_TEXT = {
     busy:['busy', 'Aktualizujem…', 'Načítavajú sa aktuálne údaje. Môžete pokračovať v práci.'],
     ok:['ok', '✓ Aktuálne', ''],
-    fail:['stale', 'Údaje nemusia byť aktuálne · Obnoviť', 'Spojenie so serverom zlyháva alebo je pomalé. Kliknutím skúsite znova.'],
+    fail:['stale', 'Údaje nemusia byť aktuálne · Obnoviť', 'Údaje sa obnovujú.'],
     idle:['stale', 'Údaje môžu byť staré · obnovia sa dotykom', 'Obrazovka bola dlhšie nečinná. Po dotyku alebo pohybe myšou sa údaje hneď obnovia (kliknutím hneď).']
   };
   function freshRender(){
@@ -3800,7 +3800,7 @@
     var st = freshState(), t = FRESH_TEXT[st];
     if(!t){ freshTag.hidden = true; return; }
     var txt = t[1];
-    if(st === 'fail' && lastContactAt){ var lc = new Date(lastContactAt); txt = 'Údaje z ' + lc.getHours() + ':' + ('0' + lc.getMinutes()).slice(-2) + ' · spojenie zlyháva · Obnoviť'; }
+    if(st === 'fail' && lastContactAt){ var lc = new Date(lastContactAt); txt = 'Údaje z ' + lc.getHours() + ':' + ('0' + lc.getMinutes()).slice(-2) + ' · Obnoviť'; }
     freshTag.hidden = false; freshTag.className = 'fresh-tag ' + t[0]; freshTag.textContent = txt; freshTag.title = t[2];
   }
   // Ask for news now if the last word from the server is old — unless something would be disturbed (a save, a poll already out, an open form).
