@@ -207,6 +207,8 @@
   .cal-sticky{ display:flex; flex-direction:column; gap:10px; }
   .cal-row2{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
   .cal-row2 .subtabs{ align-self:center; }
+  .btn-mine{ font-weight:700; font-size:13.5px; min-height:38px; padding:6px 16px; border:2px solid var(--accent); color:var(--accent); background:var(--surface); border-radius:9px; cursor:pointer; font-family:inherit; }
+  .btn-mine.btn-primary{ background:var(--accent); color:var(--accent-ink); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
   @media (min-width:821px) and (min-height:561px){
     .cal-sticky{ position:sticky; top:0; z-index:6; background:var(--surface); padding:8px 0 10px; box-shadow:0 1px 0 var(--border-soft); }
   }
@@ -556,6 +558,7 @@
         <button class="subtab" data-scope="private">Súkromné</button>
         <button class="subtab active" data-scope="both">Oboje</button>
       </div>
+      <button class="btn btn-mine" id="onlyMineBtn" type="button" aria-pressed="false" title="Zobraziť v kalendári len tréningy, na ktorých ste vy">Len moje</button>
       <div class="cal-search">
         <input id="calSearch" type="search" placeholder="Hľadať klienta, trénera, značku…  ( / )" autocomplete="off" aria-label="Hľadať v tréningoch">
         <label class="check-field" id="searchPastWrap" hidden><input type="checkbox" id="searchPast"> aj minulé</label>
@@ -565,7 +568,6 @@
         <div class="subtabs" id="zoomToggle" title="Šírka hodiny v kalendári">
           <button class="subtab" data-px="110">Úzke</button><button class="subtab active" data-px="150">Bežné</button><button class="subtab" data-px="200">Široké</button>
         </div>
-        <button class="btn btn-sm" id="onlyMineBtn" title="Zobraziť v kalendári len tréningy, na ktorých ste vy">Len moje</button>
         <button class="btn btn-sm" id="fullDayBtn" title="Zobraziť celý deň, nielen hodiny s tréningami">Celý deň</button>
         <button class="btn btn-sm btn-focus" id="focusBtn" title="Zobraziť len kalendár (ukončíte tlačidlom ✕ alebo klávesom Esc)"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Len kalendár</button>
       </div>
@@ -1566,7 +1568,8 @@
   // Which view the calendar shows must be readable from the calendar itself (the Vertigo/Súkromné/Oboje row is hidden in Len kalendár)
   function updateScopeUI(){
     var b = document.getElementById('scopeBadge'), name = clientScope==='gym' ? 'Vertigo' : clientScope==='private' ? 'Súkromné' : '';
-    b.textContent = name; b.hidden = !name;
+    var shown = [name, onlyMine ? 'Len moje' : ''].filter(Boolean).join(' · ');   // the calendar itself must say what it is filtered to
+    b.textContent = shown; b.hidden = !shown;
     var parts = ['LEN KALENDÁR']; if(name) parts.push(name); if(onlyMine) parts.push('Len moje');   // hidden filters must not be a surprise
     document.querySelector('#focusBar span').textContent = parts.join(' · ');
   }
@@ -1644,7 +1647,7 @@
     // the echo of our own sync is ignored: an old echo written back would cancel a smooth scroll that is still running
     topBar.addEventListener('scroll', function(){ if(Math.abs(topBar.scrollLeft - echoTop) <= 1) return; if(Math.abs(sc.scrollLeft - topBar.scrollLeft) > 1) sc.scrollLeft = topBar.scrollLeft; }, {passive:true});
     var zt = document.getElementById('zoomToggle');
-    function syncZoom(){ zt.querySelectorAll('.subtab').forEach(function(b){ b.classList.toggle('active', Number(b.dataset.px) === hourPx); }); document.getElementById('fullDayBtn').classList.toggle('btn-primary', fullDay); document.getElementById('onlyMineBtn').classList.toggle('btn-primary', onlyMine); }
+    function syncZoom(){ zt.querySelectorAll('.subtab').forEach(function(b){ b.classList.toggle('active', Number(b.dataset.px) === hourPx); }); document.getElementById('fullDayBtn').classList.toggle('btn-primary', fullDay); var mb = document.getElementById('onlyMineBtn'); mb.classList.toggle('btn-primary', onlyMine); mb.setAttribute('aria-pressed', onlyMine ? 'true' : 'false'); mb.textContent = onlyMine ? '✓ Len moje' : 'Len moje'; }
     zt.addEventListener('click', function(e){
       var b = e.target.closest('.subtab'); if(!b) return;
       hourPx = Number(b.dataset.px); try{ localStorage.setItem('rozpis_hourpx', String(hourPx)); }catch(x){}
@@ -3490,7 +3493,7 @@
   }
   var syncCtls = [], pollCtl = null, pollAborted = false;
   // Which page and which server code are running: hover over "Obnoviť". (The server's build is also what its web address shows when opened.)
-  var PAGE_BUILD = '2026-11-27-launch-3', serverBuild = '?';
+  var PAGE_BUILD = '2026-11-27-launch-4', serverBuild = '?';
   function setBuildInfo(b){ serverBuild = String(b).slice(0, 40); var rb = document.getElementById('refreshBtn'); if(rb) rb.title = 'Obnoviť údaje · stránka ' + PAGE_BUILD + ' · server ' + serverBuild; }
   function post(body){
     // text/plain keeps this a "simple" cross-origin request (no preflight), which Apps Script web apps accept
