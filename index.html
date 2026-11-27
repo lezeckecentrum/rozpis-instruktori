@@ -3399,7 +3399,7 @@
   }
   var syncCtls = [], pollCtl = null, pollAborted = false;
   // Which page and which server code are running: hover over "Obnoviť". (The server's build is also what its web address shows when opened.)
-  var PAGE_BUILD = '2026-11-24-assign-1', serverBuild = '?';
+  var PAGE_BUILD = '2026-11-27-launch-1', serverBuild = '?';
   function setBuildInfo(b){ serverBuild = String(b).slice(0, 40); var rb = document.getElementById('refreshBtn'); if(rb) rb.title = 'Obnoviť údaje · stránka ' + PAGE_BUILD + ' · server ' + serverBuild; }
   function post(body){
     // text/plain keeps this a "simple" cross-origin request (no preflight), which Apps Script web apps accept
@@ -4204,6 +4204,10 @@
     S.push(['Prvé kroky', true,
       '<p>Stránka je <b>rozpis tréningov</b>. Hore sú záložky <b>Kalendár</b>' + (admin ? ', <b>Tím</b>' : '') + ' a <b>Reporty</b>. Všetko, čo zmeníte, sa ukladá automaticky — stačí vyplniť údaje a kliknúť <b>Uložiť tréning</b>.</p>' +
       '<p>Vpravo hore uvidíte, či sa zmena uložila: <b>„Ukladá sa…“</b> → <b>„Uložené ✓“</b>. Ak sa objaví <b>„Overuje sa uloženie“</b>, nič nerobte — stránka to skúša znova a môžete pokračovať v práci.</p>']);
+    S.push(['Ikona na ploche', false,
+      '<p>Aby ste stránku mali vždy poruke, uložte si ju na plochu telefónu.</p>' +
+      '<p><b>iPhone (Safari):</b> klepnite na ikonu <b>Zdieľať</b> (štvorec so šípkou dole), nižšie vyberte <b>Pridať na plochu</b> a potvrďte <b>Pridať</b>.</p>' +
+      '<p><b>Android (Chrome):</b> klepnite na menu <b>⋮</b> vpravo hore, vyberte <b>Pridať na plochu</b> (niekedy <b>Inštalovať aplikáciu</b>) a potvrďte <b>Pridať</b>.</p>']);
     S.push(['Kalendár', false,
       '<p>Prepínač <b>Deň / Týždeň / Mesiac</b> mení rozsah. <b>Mesiac</b> ukáže všetky dni mesiaca pod sebou; každý týždeň má hlavičku s číslom týždňa, dnešný deň je zvýraznený a tlačidlo <b>Dnes</b> naň skočí. Šípky listujú po mesiacoch. Farba tréningu hovorí, do ktorej skupiny patrí (legenda je nad kalendárom). Tréningy sa zobrazujú podľa hodín; <b>Celý deň</b> ukáže aj hodiny bez tréningov, <b>Úzke / Bežné / Široké</b> mení šírku hodiny.</p>' +
       '<p><b>Vertigo / Súkromné / Oboje</b> filtruje, čo vidíte. <b>Len moje</b> ukáže iba tréningy, na ktorých ste vy. Pole <b>Hľadať</b> (skratka „/“) nájde tréningy podľa klienta, trénera, značky alebo telefónu a vypíše ich pod kalendárom — nadchádzajúce, alebo aj minulé po zaškrtnutí. <b>Len kalendár</b> (alebo klávesa „F“) nechá na obrazovke len kalendár; ukončíte ho tlačidlom „✕ Ukončiť“ alebo klávesom Esc.</p>' +
@@ -4229,7 +4233,7 @@
       '<p>Stránka anonymne počíta, ktoré funkcie sa používajú (napr. koľkokrát sa otvorila záložka Reporty) — len počty podľa úlohy, <b>bez mien</b> a bez obsahu tréningov. Slúži to iba na zlepšovanie stránky.</p>']);
     return S;
   }
-  var HELP_KEYS = {'Prvé kroky':'first_steps', 'Kalendár':'calendar', 'Pridať tréning':'add_training', 'Upraviť, zrušiť, vrátiť':'edit_cancel', 'Môj kalendár':'my_calendar',
+  var HELP_KEYS = {'Prvé kroky':'first_steps', 'Kalendár':'calendar', 'Pridať tréning':'add_training', 'Upraviť, zrušiť, vrátiť':'edit_cancel', 'Môj kalendár':'my_calendar', 'Ikona na ploche':'home_screen',
     'Reporty':'reports', 'Tím':'team', 'Obnoviť':'refresh_update', 'Ochrana súkromia':'privacy'};   // names for the usage counters (help_sec_<key>)
   function helpDialog(){
     if(helpOv) return helpOv;
