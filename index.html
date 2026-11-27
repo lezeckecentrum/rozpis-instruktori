@@ -130,6 +130,9 @@
   /* Focus mode: only the calendar (arrows, Dnes, Deň/Týždeň/Mesiac, legend stay); a frame + pill + ✕ show that it is on */
   .btn-focus{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:700; display:inline-flex; align-items:center; gap:7px; box-shadow:var(--shadow); }
   .btn-focus:hover{ filter:brightness(1.08); }
+  /* "Len kalendár": a clear teal outline so people notice it (the .btn rule below would otherwise flatten it to a plain button) */
+  .btn.btn-focus{ background:var(--surface); color:var(--accent); border:2px solid var(--accent); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+  .btn.btn-focus:hover{ background:var(--accent); color:var(--accent-ink); filter:none; }
   #focusBar{ position:fixed; top:8px; right:12px; z-index:45; display:none; align-items:center; gap:8px; background:var(--accent); color:var(--accent-ink); border-radius:999px; padding:4px 5px 4px 14px; font-size:12px; font-weight:800; letter-spacing:0.08em; box-shadow:var(--shadow); }
   #focusBar button{ border:none; background:rgba(255,255,255,0.22); color:inherit; font:inherit; font-weight:700; letter-spacing:0; border-radius:999px; padding:8px 14px; min-height:38px; cursor:pointer; }
   body.focus #focusBar{ display:flex; }
@@ -2953,7 +2956,7 @@
     var items = Array.from(sel.options).map(function(o, i){ return {o:o, i:i}; });
     var hidden = [], expanded = true;
     if(isMonth){
-      items.reverse();   // newest first: this month and the coming ones are at the top
+      items.reverse();   // newest first, only to pick the recent ones; they are shown in calendar order below
       if(items.length > REP_RECENT + 1){
         var older = items.slice(REP_RECENT), olderPicked = older.some(function(x){ return x.o.selected; });
         expanded = repMonthsExpanded || olderPicked;
@@ -2961,10 +2964,12 @@
         if(!expanded) items = items.slice(0, REP_RECENT);
         hidden = {n: older.length, forced: olderPicked};
       }
+      items.reverse();   // oldest -> newest, so Jan 27 comes after Dec 26
     }
-    box.innerHTML = items.map(function(x){
+    var moreBtn = (isMonth && hidden.n && !hidden.forced) ? '<button type="button" class="fchip fchip-more" data-more="1">'+(expanded ? 'Skryť staršie ▴' : 'Staršie mesiace ('+hidden.n+') ▾')+'</button>' : '';
+    box.innerHTML = moreBtn + items.map(function(x){
       return '<button type="button" class="fchip" data-i="'+x.i+'" aria-pressed="'+(x.o.selected?'true':'false')+'">'+esc(isMonth ? monShort(x.o.value) : x.o.textContent)+'</button>';
-    }).join('') + (isMonth && hidden.n && !hidden.forced ? '<button type="button" class="fchip fchip-more" data-more="1">'+(expanded ? 'Skryť staršie ▴' : 'Staršie mesiace ('+hidden.n+') ▾')+'</button>' : '');
+    }).join('');   // the "older months" button sits first, where the older months would be
     box.querySelectorAll('.fchip[data-i]').forEach(function(b){
       b.addEventListener('click', function(){
         var o = sel.options[+b.dataset.i]; o.selected = !o.selected;
@@ -3530,7 +3535,7 @@
   }
   var syncCtls = [], pollCtl = null, pollAborted = false;
   // Which page and which server code are running: hover over "Obnoviť". (The server's build is also what its web address shows when opened.)
-  var PAGE_BUILD = '2026-11-27-launch-9', serverBuild = '?';
+  var PAGE_BUILD = '2026-11-27-launch-11', serverBuild = '?';
   function setBuildInfo(b){ serverBuild = String(b).slice(0, 40); var rb = document.getElementById('refreshBtn'); if(rb) rb.title = 'Obnoviť údaje · stránka ' + PAGE_BUILD + ' · server ' + serverBuild; }
   function post(body){
     // text/plain keeps this a "simple" cross-origin request (no preflight), which Apps Script web apps accept
