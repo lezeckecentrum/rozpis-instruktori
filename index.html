@@ -386,7 +386,8 @@
   .rep-sum.active{ color:var(--accent); font-weight:600; }
   .rep-filters{ border:1px solid var(--border-soft); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:14px; }
   .rep-filters[hidden]{ display:none; }
-  .fchips{ display:flex; flex-wrap:wrap; gap:6px; max-height:132px; overflow-y:auto; }
+  .fchips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .fchip-more{ border-style:dashed; color:var(--accent); font-weight:600; }
   .fchip{ border:1px solid var(--border); background:var(--surface); color:var(--ink); border-radius:999px; padding:8px 13px; font-size:13px; font-family:inherit; cursor:pointer; min-height:38px; }
   .fchip[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
   .rep-native{ display:none !important; }
@@ -639,8 +640,8 @@
         <button class="subtab subtab-urgent active" data-sub="missing">Chýba tréner</button>
         <button class="subtab subtab-urgent" data-sub="conflicts">Konflikty</button>
         <button class="subtab" data-sub="summary">Prehľad</button>
-        <button class="subtab" data-sub="vertigo">Vertigo</button>
-        <button class="subtab" data-sub="bytrainer">Vertigo tréningy</button>
+        <button class="subtab" data-sub="vertigo">Všetci tréneri</button>
+        <button class="subtab" data-sub="bytrainer">Jeden tréner</button>
         <button class="subtab" data-sub="private">Súkromné</button>
         <button class="subtab" data-sub="load">Vyťaženosť</button>
         <button class="subtab" data-sub="activity">Zmeny</button>
@@ -705,6 +706,7 @@
       </div>
 
       <div class="subview" id="sub-vertigo" hidden>
+        <p class="cf-help">Tréningy Vertigo všetkých trénerov naraz, zoskupené podľa trénera.</p>
         <div class="stat-row" id="vertigoStats"></div>
         <label class="check-field" style="margin-top:14px;"><input type="checkbox" id="vertigoUnpaidOnly" checked> Iba nezaplatené</label>
         <div id="vertigoList" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
@@ -728,6 +730,7 @@
       </div>
 
       <div class="subview" id="sub-bytrainer" hidden>
+        <p class="cf-help">Tréningy Vertigo jedného trénera: hodiny, počet a zoznam.</p>
         <div class="field" style="max-width:260px; margin-bottom:12px;">
           <label for="byTrainerSelect">Zobraziť tréningy pre</label>
           <select id="byTrainerSelect"></select>
@@ -1468,6 +1471,7 @@
     var restrictedSubs = {summary:1, vertigo:1, activity:1};   // Súkromné is open to trainers too, but only shows their own (see drawPrivate)
     if(isPrivateOnlyViewer()){ restrictedSubs.missing = 1; restrictedSubs.conflicts = 1; } // both list Vertigo clients
     var subtabButtons = document.querySelectorAll('#reportSubtabs .subtab');
+    document.querySelector('#reportSubtabs [data-sub=bytrainer]').textContent = t ? 'Moje tréningy' : 'Jeden tréner';
     subtabButtons.forEach(function(btn){ btn.hidden = (t && restrictedSubs[btn.dataset.sub]) || (btn.dataset.sub==='archive' && !isOwnerRole()); });
 
     var activeBtn = document.querySelector('#reportSubtabs .subtab.active');
@@ -2886,7 +2890,7 @@
     var months = allMonths();
     var prevSelected = Array.from(monthSel.selectedOptions).map(function(o){return o.value;});
     monthSel.innerHTML = months.map(function(m){ return '<option value="'+m+'">'+monthLabel(m)+'</option>'; }).join('');
-    var toSelect = prevSelected.length ? prevSelected : [ym(TODAY)];
+    var toSelect = prevSelected.length ? prevSelected : defaultReportMonths(monthSel);
     Array.from(monthSel.options).forEach(function(o){ o.selected = toSelect.indexOf(o.value)!==-1; });
 
     document.getElementById('reportTagDatalist').innerHTML = allTags().map(function(t){ return '<option value="'+esc(t)+'">'; }).join('');
@@ -2930,29 +2934,55 @@
   }
 
   // ---- filter bar: chips for month and status (the two hidden selects stay the single source of truth), one summary line ----
-  var STATUS_LABEL = {confirmed:'Potvrdené', tentative:'Predbežné', completed:'Dokončené', cancelled:'Zrušené'};
+  function defaultReportMonths(sel){   // default selection: this month and every later month that exists
+    var cur = ym(TODAY), vals = Array.from(sel.options).map(function(o){ return o.value; }).filter(function(v){ return v >= cur; });
+    return vals.length ? vals : (sel.options.length ? [sel.options[sel.options.length-1].value] : []);
+  }
+  var SK_MON = ['Jan','Feb','Mar','Apr','Máj','Jún','Júl','Aug','Sep','Okt','Nov','Dec'];
+  function monShort(v){ return SK_MON[+v.slice(5,7)-1] + ' ' + v.slice(2,4); }   // "2026-11" -> "Nov 26"
+  var REP_RECENT = 6, repMonthsExpanded = false;
   function repChips(selId, boxId, keepOne){
-    var sel = document.getElementById(selId), box = document.getElementById(boxId);
-    box.innerHTML = Array.from(sel.options).map(function(o, i){
-      return '<button type="button" class="fchip" data-i="'+i+'" aria-pressed="'+(o.selected?'true':'false')+'">'+esc(o.textContent)+'</button>';
-    }).join('');
-    box.querySelectorAll('.fchip').forEach(function(b){
+    var sel = document.getElementById(selId), box = document.getElementById(boxId), isMonth = selId==='reportMonth';
+    var items = Array.from(sel.options).map(function(o, i){ return {o:o, i:i}; });
+    var hidden = [], expanded = true;
+    if(isMonth){
+      items.reverse();   // newest first: this month and the coming ones are at the top
+      if(items.length > REP_RECENT + 1){
+        var older = items.slice(REP_RECENT), olderPicked = older.some(function(x){ return x.o.selected; });
+        expanded = repMonthsExpanded || olderPicked;
+        hidden = older;
+        if(!expanded) items = items.slice(0, REP_RECENT);
+        hidden = {n: older.length, forced: olderPicked};
+      }
+    }
+    box.innerHTML = items.map(function(x){
+      return '<button type="button" class="fchip" data-i="'+x.i+'" aria-pressed="'+(x.o.selected?'true':'false')+'">'+esc(isMonth ? monShort(x.o.value) : x.o.textContent)+'</button>';
+    }).join('') + (isMonth && hidden.n && !hidden.forced ? '<button type="button" class="fchip fchip-more" data-more="1">'+(expanded ? 'Skryť staršie ▴' : 'Staršie mesiace ('+hidden.n+') ▾')+'</button>' : '');
+    box.querySelectorAll('.fchip[data-i]').forEach(function(b){
       b.addEventListener('click', function(){
         var o = sel.options[+b.dataset.i]; o.selected = !o.selected;
         if(keepOne && !sel.selectedOptions.length) o.selected = true;   // a report always needs a month
         sel.dispatchEvent(new Event('change', {bubbles:true}));
       });
     });
+    var more = box.querySelector('[data-more]');
+    if(more) more.addEventListener('click', function(){ repMonthsExpanded = !repMonthsExpanded; repChips(selId, boxId, keepOne); });
+  }
+  // "Nov 26 – Feb 27, Apr 27": months that follow each other are joined into one range
+  function monthRanges(vals){
+    var v = vals.slice().sort(), runs = [], idx = function(x){ return (+x.slice(0,4))*12 + (+x.slice(5,7)); };
+    v.forEach(function(x){ var r = runs[runs.length-1]; if(r && idx(x) === idx(r[r.length-1]) + 1) r.push(x); else runs.push([x]); });
+    return runs.map(function(r){ return r.length > 1 ? monShort(r[0]) + ' – ' + monShort(r[r.length-1]) : monShort(r[0]); }).join(', ');
   }
   function updateRepFilterUI(){
     var mSel = document.getElementById('reportMonth'), sSel = document.getElementById('reportStatus');
     if(!mSel.options.length) return;
     repChips('reportMonth', 'reportMonthChips', true);
     repChips('reportStatus', 'reportStatusChips', false);
-    var months = Array.from(mSel.selectedOptions).map(function(o){ return o.textContent; });
     var stats = Array.from(sSel.selectedOptions).map(function(o){ return STATUS_LABEL[o.value] || o.textContent; });
-    var curOnly = mSel.selectedOptions.length===1 && mSel.selectedOptions[0].value===ym(TODAY);
-    var parts = ['Mesiac: ' + months.join(', ')];
+    var def = defaultReportMonths(mSel), pickedVals = Array.from(mSel.selectedOptions).map(function(o){ return o.value; });
+    var curOnly = pickedVals.length===def.length && def.every(function(v){ return pickedVals.indexOf(v)!==-1; });   // = the default
+    var parts = [curOnly ? 'Od: ' + monShort(pickedVals.slice().sort()[0] || '0000-01') + ' a ďalšie' : 'Mesiac: ' + monthRanges(pickedVals)];
     if(stats.length) parts.push('Stav: ' + stats.join(', '));
     if(reportTagFilters.length) parts.push('Značka: ' + reportTagFilters.join(', '));
     var changed = !curOnly || stats.length || reportTagFilters.length;
@@ -2967,8 +2997,8 @@
     this.textContent = box.hidden ? 'Filtre ▾' : 'Skryť filtre ▴';
   });
   document.getElementById('repFilterReset').addEventListener('click', function(){
-    var m = document.getElementById('reportMonth'), cur = ym(TODAY), has = Array.from(m.options).some(function(o){ return o.value===cur; });
-    Array.from(m.options).forEach(function(o, i){ o.selected = has ? (o.value===cur) : (i===m.options.length-1); });
+    var m = document.getElementById('reportMonth'), def = defaultReportMonths(m);
+    Array.from(m.options).forEach(function(o){ o.selected = def.indexOf(o.value)!==-1; });
     Array.from(document.getElementById('reportStatus').options).forEach(function(o){ o.selected = false; });
     reportTagFilters.length = 0; renderTagChips(); drawAll();
   });
@@ -3493,7 +3523,7 @@
   }
   var syncCtls = [], pollCtl = null, pollAborted = false;
   // Which page and which server code are running: hover over "Obnoviť". (The server's build is also what its web address shows when opened.)
-  var PAGE_BUILD = '2026-11-27-launch-4', serverBuild = '?';
+  var PAGE_BUILD = '2026-11-27-launch-7', serverBuild = '?';
   function setBuildInfo(b){ serverBuild = String(b).slice(0, 40); var rb = document.getElementById('refreshBtn'); if(rb) rb.title = 'Obnoviť údaje · stránka ' + PAGE_BUILD + ' · server ' + serverBuild; }
   function post(body){
     // text/plain keeps this a "simple" cross-origin request (no preflight), which Apps Script web apps accept
@@ -4318,8 +4348,8 @@
     S.push(['Môj kalendár', false,
       '<p>Tlačidlo <b>Môj kalendár</b> vám dá odkaz, vďaka ktorému uvidíte svoje tréningy v Google alebo Apple Kalendári (aj v telefóne). Odkaz je súkromný — nezdieľajte ho.</p>']);
     S.push(['Reporty', false,
-      '<p><b>Na potvrdenie</b> ukazuje predbežné tréningy, ktoré treba potvrdiť (zavolajte klientovi; číslo sa dá kliknúť). „Potvrdiť“ potvrdí daný tréning hneď. Pri takých tréningoch sa hore zobrazí aj výstraha. <b>Chýba tréner</b> ukazuje tréningy, ktoré ešte potrebujú trénera. <b>Konflikty</b> hľadá prekrývajúce sa tréningy trénera. <b>Vertigo tréningy</b> a <b>Súkromné</b> sú zoznamy po mesiacoch' + (admin ? '' : ' (len vaše)') + '. <b>Vyťaženosť</b> ukazuje počet ľudí v telocvični po hodinách.</p>' +
-      (admin ? '<p>Recepcia a majiteľ vidia aj <b>Prehľad</b> (hodiny a export do CSV), <b>Vertigo</b> (platby) a <b>Zmeny</b> (kto čo zmenil).</p>' : '')]);
+      '<p><b>Na potvrdenie</b> ukazuje predbežné tréningy, ktoré treba potvrdiť (zavolajte klientovi; číslo sa dá kliknúť). „Potvrdiť“ potvrdí daný tréning hneď. Pri takých tréningoch sa hore zobrazí aj výstraha. <b>Chýba tréner</b> ukazuje tréningy, ktoré ešte potrebujú trénera. <b>Konflikty</b> hľadá prekrývajúce sa tréningy trénera. ' + (admin ? '<b>Jeden tréner</b> ukáže tréningy Vertigo vybraného trénera (hodiny a zoznam) a ' : '<b>Moje tréningy</b> a ') + '<b>Súkromné</b> sú zoznamy po mesiacoch' + (admin ? '' : ' (len vaše)') + '. <b>Vyťaženosť</b> ukazuje počet ľudí v telocvični po hodinách.</p>' +
+      (admin ? '<p>Recepcia a majiteľ vidia aj <b>Prehľad</b> (hodiny a export do CSV), <b>Všetci tréneri</b> (tréningy Vertigo všetkých trénerov, majiteľ tu značí platby) a <b>Zmeny</b> (kto čo zmenil).</p>' : '')]);
     if(admin) S.push(['Tím', false, '<p>V záložke <b>Tím</b> sa pridávajú a upravujú ľudia, ich úloha (majiteľ, recepcia, tréner) a prístup. Zmena prístupu platí hneď.</p>']);
     S.push(['Obnoviť', false,
       '<p>Tlačidlo <b>Obnoviť</b> (v úzkom okne ikona so šípkami v kruhu) načíta aktuálny stav zo servera — použite ho, ak podozrievate, že vidíte staré údaje alebo keď niečo nefunguje ako má. Ak je medzitým zverejnená novšia verzia stránky, načíta aj tú. Tlačidlo <b>Účet</b> (ikona osoby) ukrýva <b>Odhlásiť</b> a <b>Odhlásiť všade</b>.</p>']);
