@@ -211,7 +211,8 @@
   .cal-sticky{ display:flex; flex-direction:column; gap:10px; }
   .cal-row2{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
   .cal-row2 .subtabs{ align-self:center; }
-  .btn-mine{ font-weight:700; font-size:13.5px; min-height:38px; padding:6px 16px; border:2px solid var(--hot); color:var(--ink); background:var(--surface); border-radius:9px; cursor:pointer; font-family:inherit; box-shadow:0 0 0 3px color-mix(in srgb, var(--hot) 28%, transparent); }
+  .btn-mine{ font-weight:700; font-size:13.5px; min-height:38px; padding:6px 16px; border:2px solid var(--ink-faint); color:var(--ink); background:var(--surface); border-radius:9px; cursor:pointer; font-family:inherit; }
+  .btn-mine:hover{ border-color:var(--hot); box-shadow:0 0 0 3px color-mix(in srgb, var(--hot) 28%, transparent); }
   .btn-mine.btn-primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--hot); box-shadow:0 0 0 3px var(--hot); }
   @media (min-width:821px) and (min-height:561px){
     .cal-sticky{ position:sticky; top:0; z-index:6; background:var(--surface); padding:8px 0 10px; box-shadow:0 1px 0 var(--border-soft); }
@@ -3529,7 +3530,7 @@
   }
   var syncCtls = [], pollCtl = null, pollAborted = false;
   // Which page and which server code are running: hover over "Obnoviť". (The server's build is also what its web address shows when opened.)
-  var PAGE_BUILD = '2026-11-27-launch-8', serverBuild = '?';
+  var PAGE_BUILD = '2026-11-27-launch-9', serverBuild = '?';
   function setBuildInfo(b){ serverBuild = String(b).slice(0, 40); var rb = document.getElementById('refreshBtn'); if(rb) rb.title = 'Obnoviť údaje · stránka ' + PAGE_BUILD + ' · server ' + serverBuild; }
   function post(body){
     // text/plain keeps this a "simple" cross-origin request (no preflight), which Apps Script web apps accept
